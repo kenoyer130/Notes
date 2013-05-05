@@ -1,0 +1,63 @@
+﻿<div id="body">
+        <h3>Subjects</h3>
+
+<form data-bind="submit: addSubject">
+    Add subject: <input data-bind="value: newSubjectTitle" placeholder="subject you are interested in" />
+    <button type="submit">Add</button>
+</form>
+
+<ul data-bind="foreach: subjects, visible: subjects().length > 0">
+    <li>      
+        <a href="#" data-bind="text: Title, attr: { href: Url }" />
+        <a href="#" data-bind="click: $parent.removeSubject">Delete</a>
+    </li> 
+</ul>
+
+</div>
+  <script type='text/javascript'>
+      function Subject(data) {
+          this.SubjectID = ko.observable(data.SubjectID);
+          this.Title = ko.observable(data.Title);
+          this.Url = "/NotesView?subject=" + data.SubjectID;
+      }
+
+      $(document).ready(function () {
+          ko.applyBindings(new SubjectViewModel());
+      });
+
+      function SubjectViewModel() {
+          // Data
+          var self = this;
+          self.subjects = ko.observableArray([]);
+          self.newSubjectTitle = ko.observable();
+
+          $.getJSON("/api/subject/GetAllSubjects", function (allData) {
+              var mappedSubjects = $.map(allData, function (item) { return new Subject(item) });
+              self.subjects(mappedSubjects);
+          });
+          
+          // Operations          
+          self.addSubject = function () {
+              $.ajax("/api/subject/SaveNew", {
+                  data: ko.toJSON(new Subject({ Title: this.newSubjectTitle() })),
+                  type: "post", contentType: "application/json",
+                  success: function (result) {
+                      self.subjects.push(new Subject(result));
+                      self.newSubjectTitle("");
+                  }
+              })
+          };
+
+          self.removeSubject = function (subject) {
+              var subjectID = subject.SubjectID();
+
+              $.ajax("/api/subject/" + subjectID, {
+                  type: "delete",
+                  success: function (result) {
+                      self.subjects.remove(subject)
+                  }
+              })
+          };
+      }     
+
+  </script>
