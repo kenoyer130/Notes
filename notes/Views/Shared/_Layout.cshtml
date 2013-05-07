@@ -9,22 +9,7 @@
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/scripts/knockout-2.2.0.js")
 </head>
-<body>
-    <header>
-        <div class="content-wrapper">
-            <div class="float-left">
-                <p class="site-title">
-                    <a href="~/">Notes</a></p>
-            </div>
-            <div class="float-right">
-                <nav>
-                    <ul id="menu">
-                        <li>@Html.ActionLink("Home", "Index", "Home", new { area = "" }, null)</li>                        
-                    </ul>
-                </nav>
-            </div>
-        </div>
-    </header>
+<body>   
     @RenderBody()
 
     

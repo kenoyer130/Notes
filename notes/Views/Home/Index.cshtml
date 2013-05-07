@@ -1,2 +1,95 @@
-﻿
+﻿<div class="wrap">
+    <div class="leftCol">
+        <div>
+            <div id="pnlSubject" class="panel">
+                <form data-bind="submit: addSubject">
+                    <div>
+                        <span>Subject</span>
+                        <input data-bind="value: newSubjectTitle" placeholder="subject" />
+                        <button type="submit">Save</button>
+                    </div>
+                    <div>
+                        <button type="button" data-bind="click: $parent.removeSubject">Delete Subject</button>
+                    </div>
+                </form>
+            </div>
+            <div id="pnlCategory" class="panel">
+                <form data-bind="submit: addCategory">
+                    <div>
+                        <span>Categoy</span>
+                        <input data-bind="value: newCategory" placeholder="category" />
+                        <button type="submit">Save</button>
+                    </div>
+                    <div id="treeCategory" class="panel">
+                    </div>
+                    <div>
+                        <button type="button">Delete Category</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="rightCol">
+        <div id="pnlCards" class="panel">
+            <div id="cardTop">
+                <div id="pnlBreadcrumb">Home ></div>
+                <div id="cardToolbar">
+                    <button type="submit">Test!</button></div>
+            </div>
+            <div id="cardLabel">
+                <div id="cardBox">Day</div>
+                <div id="cardTested"><span>Last Tested: </span><span>4/4/2012 4:50 PM</span></div>
+            </div>
+            <div>
+                <textarea id="cardFront"></textarea>
+                <textarea id="cardBack"></textarea>
+                <button type="button">Delete Card</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    function Subject(data) {
+        this.SubjectID = ko.observable(data.SubjectID);
+        this.Title = ko.observable(data.Title);        
+    }
 
+    $(document).ready(function () {
+        ko.applyBindings(new SubjectViewModel());
+    });
+
+    function SubjectViewModel() {
+        // Data
+        var self = this;
+        self.subjects = ko.observableArray([]);
+        self.newSubjectTitle = ko.observable();
+
+        $.getJSON("/api/subject/GetAllSubjects", function (allData) {
+            var mappedSubjects = $.map(allData, function (item) { return new Subject(item) });
+            self.subjects(mappedSubjects);
+        });
+
+        // Operations          
+        self.addSubject = function () {
+            $.ajax("/api/subject/SaveNew", {
+                data: ko.toJSON(new Subject({ Title: this.newSubjectTitle() })),
+                type: "post", contentType: "application/json",
+                success: function (result) {
+                    self.subjects.push(new Subject(result));
+                    self.newSubjectTitle("");
+                }
+            })
+        };
+
+        self.removeSubject = function (subject) {
+            var subjectID = subject.SubjectID();
+
+            $.ajax("/api/subject/" + subjectID, {
+                type: "delete",
+                success: function (result) {
+                    self.subjects.remove(subject)
+                }
+            })
+        };
+    }
+</script>
