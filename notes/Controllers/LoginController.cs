@@ -22,7 +22,7 @@ namespace notes.Controllers
         {
             accountRepository = new AccountGoogleRepository();
         }
-
+       
         public ActionResult Index()
         {
             return View();
@@ -32,14 +32,13 @@ namespace notes.Controllers
         {
             var openid = new OpenIdRelyingParty();
             IAuthenticationResponse response = openid.GetResponse();
-
+           
             if (response != null)
             {
                 switch (response.Status)
                 {
-                    case AuthenticationStatus.Authenticated:
-                        Session["accountID"] = accountRepository.Login(response.ClaimedIdentifier);                        
-                        FormsAuthentication.SetAuthCookie(Session["accountID"].ToString(), true);
+                    case AuthenticationStatus.Authenticated:                                             
+                        FormsAuthentication.SetAuthCookie(accountRepository.Login(response.ClaimedIdentifier).ToString(), true);
                         return new RedirectResult("/", false);
                     case AuthenticationStatus.Canceled:
                         ModelState.AddModelError("loginIdentifier",

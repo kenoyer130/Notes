@@ -1,29 +1,17 @@
 ﻿<div class="wrap">
     <div class="leftCol">
         <div>
-            <div id="pnlSubject" class="panel">
-                <form data-bind="submit: addSubject">
-                    <div>
-                        <span>Subject</span>
-                        <input data-bind="value: newSubjectTitle" placeholder="subject" />
-                        <button type="submit">Save</button>
-                    </div>
-                    <div>
-                        <button type="button" data-bind="click: $parent.removeSubject">Delete Subject</button>
-                    </div>
-                </form>
-            </div>
             <div id="pnlCategory" class="panel">
                 <form data-bind="submit: addCategory">
                     <div>
                         <span>Categoy</span>
-                        <input data-bind="value: newCategory" placeholder="category" />
+                        <input data-bind="value: newCategoryTitle" placeholder="category" />
                         <button type="submit">Save</button>
                     </div>
                     <div id="treeCategory" class="panel">
                     </div>
                     <div>
-                        <button type="button">Delete Category</button>
+                        <button type="button" data-bind="click: removeCategory">Delete Category</button>
                     </div>
                 </form>
             </div>
@@ -32,9 +20,10 @@
     <div class="rightCol">
         <div id="pnlCards" class="panel">
             <div id="cardTop">
-                <div id="pnlBreadcrumb">Home ></div>
+                <div id="pnlBreadcrumb"></div>
                 <div id="cardToolbar">
-                    <button type="submit">Test!</button></div>
+                    <button type="submit">Test!</button>
+                </div>
             </div>
             <div id="cardLabel">
                 <div id="cardBox">Day</div>
@@ -43,53 +32,168 @@
             <div>
                 <textarea id="cardFront"></textarea>
                 <textarea id="cardBack"></textarea>
-                <button type="button">Delete Card</button>
+               <div><button style="float:left;" type="button">Delete Card</button><button type="button" style="float:right;">Save Card</button></div>
             </div>
         </div>
     </div>
 </div>
 <script type="text/javascript">
-    function Subject(data) {
-        this.SubjectID = ko.observable(data.SubjectID);
-        this.Title = ko.observable(data.Title);        
+
+    var selectedCategoryID = 0;
+    var categoryTree;
+
+    function CategroyTree(data) {
+        var self = this;
+        this.Data = data;
+
+        self.GetBreadcrumb = function (categoryID) {
+            // find the path to the selectedCategory
+            var selectedNode = self.findNode(categoryID, this.Data);
+            var stack = new Array();
+            
+            //todo : why sometimes array returned?
+            if(selectedNode.length != undefined)
+                selectedNode = selectedNode[0];
+           
+            stack.push(selectedNode);
+
+            if (selectedNode.Value.ParentCategoryID == 0)
+                return stack;
+
+            var parent = self.findNode(selectedNode.Value.ParentCategoryID, this.Data);
+            if (parent.length != undefined)
+                parent = parent[0];
+
+            while (parent != null) {
+                stack.push(parent);
+                if (parent.Value.ParentCategoryID == 0) {
+                    parent = null;
+                    continue;
+                }
+
+                parent = self.findNode(parent.Value.ParentCategoryID, this.Data);
+                if (parent.length != undefined)
+                    parent = parent[0];
+            }
+
+            return stack;
+        }
+
+        self.findNode = function (categoryID, data) {
+            if (data.Value.CategoryID === categoryID)
+                return data;
+
+           return $.each(data.Children, function (i, item) {
+                var node = self.findNode(categoryID, item);
+                if (node.length > 0)
+                    return node;
+            })
+        }
+    }
+
+    function getElement(id) {
+        return window.document.getElementById(id);
+    }
+
+    function clearChildren(element) {
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
+    }
+
+    function Category(data) {
+        this.CategoryID = ko.observable(data.CategoryID);
+        this.Title = ko.observable(data.Title);
+        this.ParentCategoryID = ko.observable(data.ParentCategoryID);
     }
 
     $(document).ready(function () {
-        ko.applyBindings(new SubjectViewModel());
+        ko.applyBindings(new CategoryViewModel(), getElement("pnlCategory"));
+        loadCategoryTree();
     });
 
-    function SubjectViewModel() {
+    function loadCategoryTree() {
+        $.getJSON("/api/category/GetAllCategories", function (data) {
+
+            categoryTree = new CategroyTree(data[0]);
+
+            var rootElement = getElement("treeCategory");
+            clearChildren(rootElement);
+
+            $.each(data, function(i, item) {
+                addTreeNode(rootElement, data[i]);
+            })         
+        });
+    }
+
+    function addTreeNode(rootElement, data) {
+
+        var childElement = document.createElement('div');
+        childElement.setAttribute("class",'categoryNode');
+        childElement.setAttribute("onclick",'updateBreadCrumb(' + data.Value.CategoryID + ');');
+
+        childElement.innerHTML = data.Value.Title;
+
+        rootElement.appendChild(childElement);
+
+        if (data.Children == null)
+            return;
+
+        $.each(data.Children, function (i, item) {
+            addTreeNode(childElement, item);
+        })
+    }
+
+    function updateBreadCrumb(categoryID) {
+        selectedCategoryID = categoryID;
+
+        var rootElement = $("#pnlBreadcrumb");
+        rootElement.empty();
+
+        var stack = categoryTree.GetBreadcrumb(categoryID);
+        var value = stack.pop();
+
+        while (value != null) {
+            rootElement.append("<span>" + value.Value.Title + "</span>");
+            if (stack.length != 0)
+                rootElement.append(" > ");            
+
+            value = stack.pop();
+        }
+
+        event.stopPropagation();
+    }
+
+    function CategoryViewModel() {
         // Data
         var self = this;
-        self.subjects = ko.observableArray([]);
-        self.newSubjectTitle = ko.observable();
-
-        $.getJSON("/api/subject/GetAllSubjects", function (allData) {
-            var mappedSubjects = $.map(allData, function (item) { return new Subject(item) });
-            self.subjects(mappedSubjects);
-        });
+        self.newCategoryTitle = ko.observable();
 
         // Operations          
-        self.addSubject = function () {
-            $.ajax("/api/subject/SaveNew", {
-                data: ko.toJSON(new Subject({ Title: this.newSubjectTitle() })),
+        self.addCategory = function () {
+            $.ajax("/api/category/SaveNew", {
+                data: ko.toJSON(new Category({ Title: this.newCategoryTitle(), ParentCategoryID: selectedCategoryID })),
                 type: "post", contentType: "application/json",
                 success: function (result) {
-                    self.subjects.push(new Subject(result));
-                    self.newSubjectTitle("");
+                    self.newCategoryTitle("");
+                    loadCategoryTree();
                 }
             })
         };
 
-        self.removeSubject = function (subject) {
-            var subjectID = subject.SubjectID();
+        self.removeCategory = function () {
+            var categoryID = selectedCategoryID;
 
-            $.ajax("/api/subject/" + subjectID, {
+            if (!confirm("You are about to delete category " + categoryID))
+                return;
+
+            $.ajax("/api/category/Delete/" + categoryID, {
                 type: "delete",
                 success: function (result) {
-                    self.subjects.remove(subject)
+                    loadCategoryTree();
                 }
             })
         };
     }
+
 </script>

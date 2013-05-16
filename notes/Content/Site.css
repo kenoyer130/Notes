@@ -34,15 +34,15 @@
 
 #pnlCategory {
     height: 100%;
-    min-height: 440px;
+    min-height: 510px;
 }
 
 #treeCategory {
     height: 100%;
-    min-height: 380px;
+    min-height: 420px;
 }
 
-#pnlCards {  
+#pnlCards {
     height: 100%;
     min-height: 514px;
 }
@@ -61,15 +61,26 @@
 }
 
 #cardBox {
-    float:left;
+    float: left;
     width: 150px;
 }
-#cardFront { 
+
+#cardFront {
     width: 99%;
-    height: 125px;      
+    height: 125px;
 }
 
-#cardBack {   
+#cardBack {
     width: 99%;
-    height: 290px;      
+    height: 290px;
+}
+
+div.categoryNode {   
+    margin-left: 10px;
+    padding: 0;
+    cursor: pointer;
+}
+
+div.categoryNodeSelected {
+    text-decoration: dotted;
 }

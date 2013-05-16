@@ -14,6 +14,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{460455
 		.nuget\packages.config = .nuget\packages.config
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotesServices", "NotesServices\NotesServices.csproj", "{4521247B-B1C8-476C-8908-D1DECA5A139B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,6 +38,10 @@ Global
 		{6F16A7C8-5310-4C36-9615-467EACB5385A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6F16A7C8-5310-4C36-9615-467EACB5385A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6F16A7C8-5310-4C36-9615-467EACB5385A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4521247B-B1C8-476C-8908-D1DECA5A139B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4521247B-B1C8-476C-8908-D1DECA5A139B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4521247B-B1C8-476C-8908-D1DECA5A139B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4521247B-B1C8-476C-8908-D1DECA5A139B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

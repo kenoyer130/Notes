@@ -10,5 +10,6 @@ namespace notes.Models
         public int CategoryID { get; set; }
         public string Title { get; set; }
         public int ParentCategoryID { get; set; }
+        public int AccountID { get; set; }        
     }
 }

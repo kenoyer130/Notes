@@ -108,6 +108,15 @@
     <Reference Include="DotNetOpenAuth.OpenIdOAuth">
       <HintPath>..\packages\DotNetOpenAuth.OpenIdOAuth.4.3.0.13117\lib\net45-full\DotNetOpenAuth.OpenIdOAuth.dll</HintPath>
     </Reference>
+    <Reference Include="Glimpse.AspNet">
+      <HintPath>..\packages\Glimpse.AspNet.1.2.2\lib\net45\Glimpse.AspNet.dll</HintPath>
+    </Reference>
+    <Reference Include="Glimpse.Core">
+      <HintPath>..\packages\Glimpse.1.3.1\lib\net45\Glimpse.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Glimpse.Mvc4">
+      <HintPath>..\packages\Glimpse.Mvc4.1.2.2\lib\net40\Glimpse.Mvc4.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -230,17 +239,17 @@
     <Compile Include="Areas\HelpPage\SampleGeneration\SampleDirection.cs" />
     <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
+    <Compile Include="Controllers\CategoryController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\BaseNotesController.cs" />
     <Compile Include="Controllers\LoginController.cs" />
     <Compile Include="Controllers\NotesController.cs" />
     <Compile Include="Controllers\NotesViewController.cs" />
-    <Compile Include="Controllers\SubjectController.cs" />
+    <Compile Include="GlimpseSecurityPolicy.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Services\SubjectService.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="App_Data\notes.mdf" />
@@ -316,6 +325,7 @@
     <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ApiGroup.cshtml" />
     <Content Include="Areas\HelpPage\Views\Help\Api.cshtml" />
     <None Include="Scripts\jquery-1.8.2.intellisense.js" />
+    <Content Include="Scripts\categoryTree.js" />
     <Content Include="Scripts\jquery-1.8.2.js" />
     <Content Include="Scripts\jquery-1.8.2.min.js" />
     <None Include="Scripts\jquery.validate-vsdoc.js" />
@@ -374,6 +384,10 @@
     <ProjectReference Include="..\NotesModel\NotesRepository.csproj">
       <Project>{cd0b6b36-0410-4668-aacb-185eb2625d20}</Project>
       <Name>NotesRepository</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NotesServices\NotesServices.csproj">
+      <Project>{4521247b-b1c8-476c-8908-d1deca5a139b}</Project>
+      <Name>NotesServices</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
