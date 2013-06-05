@@ -84,7 +84,10 @@
     <Compile Include="BaseRepository.cs" />
     <Compile Include="CategoryRepository.cs" />
     <Compile Include="Connection.cs" />
+    <Compile Include="CreateTestRunCommand.cs" />
+    <Compile Include="GetNextTestNoteCommand.cs" />
     <Compile Include="GlimpseSecurityPolicy.cs" />
+    <Compile Include="NotesRepository.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

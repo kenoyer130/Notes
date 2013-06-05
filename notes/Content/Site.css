@@ -34,17 +34,18 @@
 
 #pnlCategory {
     height: 100%;
-    min-height: 510px;
+    min-height: 532px;
 }
 
 #treeCategory {
     height: 100%;
-    min-height: 420px;
+    min-height: 460px;
+    overflow:auto;
 }
 
 #pnlCards {
     height: 100%;
-    min-height: 514px;
+    min-height: 534px;
 }
 
 #cardTop {
@@ -78,9 +79,30 @@
 div.categoryNode {   
     margin-left: 10px;
     padding: 0;
+    padding-left: 20px;   
     cursor: pointer;
+    background-image:url('../Content/images/folder.png');
+    background-repeat:no-repeat;
+    white-space:nowrap;
 }
 
-div.categoryNodeSelected {
-    text-decoration: dotted;
+
+div.noteNode {
+    margin-left: 10px;
+    padding: 0;
+    padding-left: 20px; 
+    vertical-align: middle;
+    cursor: pointer;
+    background-image:url('../Content/images/card.png');
+    background-repeat:no-repeat;
+    white-space:nowrap;
+}
+
+.focus {
+    text-decoration:underline;
+}
+
+#errorcontainer {
+    background-color: pink;
+    color:red;
 }

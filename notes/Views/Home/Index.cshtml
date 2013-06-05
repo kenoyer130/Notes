@@ -1,4 +1,5 @@
 ﻿<div class="wrap">
+    <div id="errorcontainer"></div>
     <div class="leftCol">
         <div>
             <div id="pnlCategory" class="panel">
@@ -22,17 +23,21 @@
             <div id="cardTop">
                 <div id="pnlBreadcrumb"></div>
                 <div id="cardToolbar">
-                    <button type="submit">Test!</button>
+                    <button data-bind="click: newNote">New Card</button>
+                    <button id="btnTest">Start Test</button>
                 </div>
             </div>
             <div id="cardLabel">
-                <div id="cardBox">Day</div>
+                Bucket
+                <div id="cardBox" data-bind="text: BucketID"></div>
                 <div id="cardTested"><span>Last Tested: </span><span>4/4/2012 4:50 PM</span></div>
             </div>
             <div>
-                <textarea id="cardFront"></textarea>
-                <textarea id="cardBack"></textarea>
-               <div><button style="float:left;" type="button">Delete Card</button><button type="button" style="float:right;">Save Card</button></div>
+                <textarea id="cardFront" data-bind="value: Title" placeholder="new card"></textarea>
+                <textarea id="cardBack" data-bind="value: Description"></textarea>
+                <div>
+                    <button style="float: left;" type="button" data-bind="click: deleteNote, enable: NoteID > 0" >Delete Card</button>
+                    <button type="button" style="float: right;" data-bind="click: saveNote">Save Card</button></div>
             </div>
         </div>
     </div>
@@ -41,6 +46,100 @@
 
     var selectedCategoryID = 0;
     var categoryTree;
+    var lastFocused;
+
+    $(document).ready(function () {
+        ko.applyBindings(new CategoryViewModel(), getElement("pnlCategory"));
+        ko.applyBindings(new NoteViewModel(), getElement("pnlCards"));
+        loadCategoryTree();
+
+        $("#btnTest").click(function () {
+            window.location.href = '/Test'
+        });
+    });
+
+    function NoteViewModel(noteId, categoryID, title, description, bucketID) {
+        // data
+        var self = this;
+       
+        self.NoteID = noteId == undefined ? 0 : noteId;
+        self.CategoryID = categoryID == undefined ? 0 : categoryID;
+        self.Title = ko.observable(title == undefined ? "" : title);
+        self.Description = ko.observable(description == undefined ? "" : description);
+        self.BucketID = ko.observable(bucketID == undefined ? 0 : bucketID);
+
+        self.newNote = function () {
+            newNote = new NoteViewModel();
+            newNote.CategoryID = selectedCategoryID;
+            ko.cleanNode(getElement("pnlCards"));
+            ko.applyBindings(newNote, getElement("pnlCards"));
+        }
+
+        self.deleteNote = function () {
+           
+            if (!confirm("You are about to delete note " + self.Title() +". Are you sure?"))
+                return;
+
+            $.ajax("/api/notes/Delete/"+ self.NoteID, {              
+                type: "delete", contentType: "application/json",
+                success: function (result) {
+                    self.newNote();
+                    loadCategoryTree();
+                }
+            })
+        }
+
+        // methods
+        self.saveNote = function () {
+            var action = "";
+            var categoryID;
+
+            if (self.NoteID == 0) {
+                action = "Create";
+                if (selectedCategoryID == 0) {
+                    alert("Please select a category.");
+                    return;
+                }
+
+                categoryID = selectedCategoryID
+            } else {
+                action = "Update";
+                categoryID = self.CategoryID;
+            }
+
+            var data = ko.toJSON({
+                NoteID: self.NoteID,
+                CategoryID: categoryID,
+                Title: self.Title(),
+                Description: self.Description(),
+                BucketID: self.BucketID
+            });
+
+            $.ajax("/api/notes/" + action, {
+                data: data,
+                type: "post", contentType: "application/json",
+                success: function (result) {
+                    self.NoteID = result;
+                    loadCategoryTree();
+                }
+            })
+        };
+    }
+
+    function clearNote() {       
+        newNote = new NoteViewModel();
+        newNote.CategoryID = selectedCategoryID;
+        ko.cleanNode(getElement("pnlCards"));
+        ko.applyBindings(newNote, getElement("pnlCards"));
+    }
+
+    function loadNote(note) {       
+        var noteViewModel = new NoteViewModel(note.NoteID, note.CategoryID, note.Title, note.Description, note.Bucket);
+        ko.cleanNode(getElement("pnlCards"));
+        ko.applyBindings(noteViewModel, getElement("pnlCards"));
+        event.stopPropagation();
+        updateBreadCrumb(note.CategoryID);
+    }
 
     function CategroyTree(data) {
         var self = this;
@@ -50,19 +149,13 @@
             // find the path to the selectedCategory
             var selectedNode = self.findNode(categoryID, this.Data);
             var stack = new Array();
-            
-            //todo : why sometimes array returned?
-            if(selectedNode.length != undefined)
-                selectedNode = selectedNode[0];
-           
+
             stack.push(selectedNode);
 
             if (selectedNode.Value.ParentCategoryID == 0)
                 return stack;
 
             var parent = self.findNode(selectedNode.Value.ParentCategoryID, this.Data);
-            if (parent.length != undefined)
-                parent = parent[0];
 
             while (parent != null) {
                 stack.push(parent);
@@ -72,8 +165,6 @@
                 }
 
                 parent = self.findNode(parent.Value.ParentCategoryID, this.Data);
-                if (parent.length != undefined)
-                    parent = parent[0];
             }
 
             return stack;
@@ -83,11 +174,13 @@
             if (data.Value.CategoryID === categoryID)
                 return data;
 
-           return $.each(data.Children, function (i, item) {
-                var node = self.findNode(categoryID, item);
-                if (node.length > 0)
+            for (var i = 0; i < data.Children.length; i++) {
+                var node = self.findNode(categoryID, data.Children[i]);
+                if (node != null)
                     return node;
-            })
+            }
+
+            return null;
         }
     }
 
@@ -107,11 +200,6 @@
         this.ParentCategoryID = ko.observable(data.ParentCategoryID);
     }
 
-    $(document).ready(function () {
-        ko.applyBindings(new CategoryViewModel(), getElement("pnlCategory"));
-        loadCategoryTree();
-    });
-
     function loadCategoryTree() {
         $.getJSON("/api/category/GetAllCategories", function (data) {
 
@@ -120,19 +208,22 @@
             var rootElement = getElement("treeCategory");
             clearChildren(rootElement);
 
-            $.each(data, function(i, item) {
+            $.each(data, function (i, item) {
                 addTreeNode(rootElement, data[i]);
-            })         
+            })
         });
     }
 
     function addTreeNode(rootElement, data) {
 
         var childElement = document.createElement('div');
-        childElement.setAttribute("class",'categoryNode');
-        childElement.setAttribute("onclick",'updateBreadCrumb(' + data.Value.CategoryID + ');');
+        childElement.setAttribute("class", 'categoryNode');       
+        childElement.setAttribute("onclick", 'clearNote();setFocus(this);updateBreadCrumb(' + data.Value.CategoryID + ');');
 
         childElement.innerHTML = data.Value.Title;
+
+        if(data.Notes != 'undefined')
+            addNotes(childElement, data.Notes);
 
         rootElement.appendChild(childElement);
 
@@ -144,9 +235,34 @@
         })
     }
 
+    function setFocus(element) {
+        if (lastFocused != null)
+            lastFocused.className = lastFocused.className.replace(/(?:^|\s)focus(?!\S)/g, '');
+
+        element.className += " focus";
+        lastFocused = element;
+    }
+
+    function addNotes(categoryElement, notes) {
+        $.each(notes, function (i, item) {
+            addNote(categoryElement, item);
+        })
+    }
+
+    function addNote(categoryElement, note) {
+        var childElement = document.createElement('div');
+        childElement.setAttribute("class", 'noteNode');        
+        childElement.setAttribute("onclick", 'setFocus(this);loadNote(' + ko.toJSON(note) + ');');
+        childElement.setAttribute("title", 'note.Title');
+
+        childElement.innerHTML = note.Title;
+
+        categoryElement.appendChild(childElement);
+    }   
+
     function updateBreadCrumb(categoryID) {
         selectedCategoryID = categoryID;
-
+        
         var rootElement = $("#pnlBreadcrumb");
         rootElement.empty();
 
@@ -156,7 +272,7 @@
         while (value != null) {
             rootElement.append("<span>" + value.Value.Title + "</span>");
             if (stack.length != 0)
-                rootElement.append(" > ");            
+                rootElement.append(" > ");
 
             value = stack.pop();
         }
@@ -195,5 +311,39 @@
             })
         };
     }
+
+    $("div#errorcontainer")
+       .ajaxStart(function () {
+           $(this).css("display", "none");
+       });
+
+    $("div#errorcontainer")
+    .ajaxError(
+        function (e, x, settings, exception) {
+            var message;
+            var statusErrorMap = {
+                '400': "Server understood the request but request content was invalid.",
+                '401': "Unauthorised access.",
+                '403': "Forbidden resouce can't be accessed",
+                '500': "Internal Server Error.",
+                '503': "Service Unavailable"
+            };
+            if (x.status) {
+                message = statusErrorMap[x.status];
+                if (!message) {
+                    message = "Unknow Error \n.";
+                }
+            } else if (exception == 'parsererror') {
+                message = "Error.\nParsing JSON Request failed.";
+            } else if (exception == 'timeout') {
+                message = "Request Time out.";
+            } else if (exception == 'abort') {
+                message = "Request was aborted by the server";
+            } else {
+                message = "Unknow Error \n.";
+            }
+            $(this).css("display", "inline");
+            $(this).html(message + ':' + eval("("  + x.responseText + ")").ExceptionMessage);
+        });
 
 </script>
